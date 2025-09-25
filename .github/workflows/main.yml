@@ -27,7 +27,7 @@ jobs:
       - name: Build macOS .app with PyInstaller
         run: |
           # 注意：GUI 应用要用 --windowed
-          pyinstaller --windowed --onefile src/main.py \
+          pyinstaller --windowed --onefile main.py \
             --name MyPyQtApp \
             --icon=assets/xdjk.icns \
 
