@@ -29,7 +29,6 @@ jobs:
           pyinstaller --windowed --onefile main.py \
             --name MyPyQtApp \
             --icon=assets/xdjk.icns \
-            --add-data "resources/*:resources/"
           ls -la dist
 
       - name: Create .dmg installer
