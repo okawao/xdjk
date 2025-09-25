@@ -1,17 +1,13 @@
-name: Build Python Executable
+name: Build PyQt macOS App
 
 on:
   push:
-    branches:
-      - main
+    branches: [ main ]
   pull_request:
 
 jobs:
-  build:
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        os: [macos-latest]
+  build-macos-app:
+    runs-on: macos-latest
 
     steps:
       - name: Checkout repository
@@ -28,12 +24,18 @@ jobs:
           pip install -r requirements.txt
           pip install pyinstaller
 
-      - name: Build executable with PyInstaller
+      - name: Build macOS .app with PyInstaller
         run: |
-          pyinstaller --onefile main.py
+          # 注意：GUI 应用要用 --windowed
+          pyinstaller --windowed --onefile src/main.py \
+            --name MyPyQtApp \
+            --icon=assets/xdjk.icns \
 
-      - name: Upload build artifact
+          # 查看 dist 目录
+          ls -la dist
+
+      - name: Upload .app artifact
         uses: actions/upload-artifact@v4
         with:
-          name: my-program-${{ matrix.os }}
-          path: dist/
+          name: MyPyQtApp-macos
+          path: dist/MyPyQtApp.app
