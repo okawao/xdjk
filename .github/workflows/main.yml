@@ -30,11 +30,17 @@ jobs:
           pip install -r requirements.txt
           pip install pyinstaller
 
+      - name: Set UTF-8 encoding for Windows
+        run: |
+          [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
+          $env:PYTHONIOENCODING = "utf-8"
+
       - name: Generate config file from environment variables
         run: |
-          Write-Host "🔧 生成配置文件..."
+          $env:PYTHONIOENCODING = "utf-8"
+          Write-Host "生成配置文件..."
           python build_config.py
-          Write-Host "📄 配置文件内容:"
+          Write-Host "配置文件内容:"
           Get-Content config.py
 
       - name: Build Windows .exe with PyInstaller
@@ -45,7 +51,7 @@ jobs:
 
       - name: List build output
         run: |
-          Write-Host "📦 构建产物:"
+          Write-Host "构建产物:"
           Get-ChildItem -Path dist -Recurse
 
       - name: Upload Windows .exe artifact
@@ -80,9 +86,9 @@ jobs:
 
       - name: Generate config file from environment variables
         run: |
-          echo "🔧 生成配置文件..."
+          echo "生成配置文件..."
           python build_config.py
-          echo "📄 配置文件内容:"
+          echo "配置文件内容:"
           cat config.py
 
       - name: Build macOS .app with PyInstaller
