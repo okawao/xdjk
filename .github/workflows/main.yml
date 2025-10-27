@@ -1,4 +1,4 @@
-name: Build PyQt macOS App
+name: Build PyQt Cross-Platform Apps
 
 on:
   push:
@@ -6,8 +6,14 @@ on:
   pull_request:
 
 jobs:
-  build-macos-app:
-    runs-on: macos-latest
+  build-windows:
+    runs-on: windows-latest
+    
+    # 设置环境变量 - 从 GitHub Secrets 读取
+    env:
+      HOST_IP: ${{ secrets.HOST_IP }}
+      HOST_PORT: ${{ secrets.HOST_PORT }}
+      BUILD_TIME: ${{ github.event.head_commit.timestamp }}
 
     steps:
       - name: Checkout repository
@@ -24,29 +30,84 @@ jobs:
           pip install -r requirements.txt
           pip install pyinstaller
 
+      - name: Generate config file from environment variables
+        run: |
+          Write-Host "🔧 生成配置文件..."
+          python build_config.py
+          Write-Host "📄 配置文件内容:"
+          Get-Content config.py
+
+      - name: Build Windows .exe with PyInstaller
+        run: |
+          pyinstaller --windowed --onefile xdjkgui.py `
+            --name xdjkgui `
+            --add-data "config.py;."
+
+      - name: List build output
+        run: |
+          Write-Host "📦 构建产物:"
+          Get-ChildItem -Path dist -Recurse
+
+      - name: Upload Windows .exe artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: xdjkgui-windows-exe
+          path: dist/xdjkgui.exe
+
+  build-macos:
+    runs-on: macos-latest
+    
+    # 设置环境变量 - 从 GitHub Secrets 读取
+    env:
+      HOST_IP: ${{ secrets.HOST_IP }}
+      HOST_PORT: ${{ secrets.HOST_PORT }}
+      BUILD_TIME: ${{ github.event.head_commit.timestamp }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pyinstaller
+
+      - name: Generate config file from environment variables
+        run: |
+          echo "🔧 生成配置文件..."
+          python build_config.py
+          echo "📄 配置文件内容:"
+          cat config.py
+
       - name: Build macOS .app with PyInstaller
         run: |
-          pyinstaller --windowed --onefile main.py \
-            --name MyPyQtApp \
+          pyinstaller --windowed --onefile xdjkgui.py \
+            --name xdjkgui \
             --icon=assets/xdjk.icns \
-
+            --add-data "config.py:."
 
       - name: Create .dmg installer
         run: |
           mkdir -p dist/dmg
-          hdiutil create -volname "MyPyQtApp" \
-            -srcfolder dist/MyPyQtApp.app \
-            -ov -format UDZO dist/dmg/MyPyQtApp.dmg
+          hdiutil create -volname "xdjkgui" \
+            -srcfolder dist/xdjkgui.app \
+            -ov -format UDZO dist/dmg/xdjkgui.dmg
           ls -la dist/dmg
 
       - name: Upload .app artifact
         uses: actions/upload-artifact@v4
         with:
-          name: MyPyQtApp-macos-app
-          path: dist/MyPyQtApp.app
+          name: xdjkgui-macos-app
+          path: dist/xdjkgui.app
 
       - name: Upload .dmg artifact
         uses: actions/upload-artifact@v4
         with:
-          name: MyPyQtApp-macos-dmg
-          path: dist/dmg/MyPyQtApp.dmg
+          name: xdjkgui-macos-dmg
+          path: dist/dmg/xdjkgui.dmg
