@@ -165,6 +165,7 @@ class BluetoothWorker(QThread):
                     None
                 )
                 if not target_service:
+                    self.log_signal.emit(f"❌ 未找到目标服务: {SERVICE_UUID}")
                     return None, None
 
                 # 在服务中查找目标特征值
@@ -173,6 +174,7 @@ class BluetoothWorker(QThread):
                     None
                 )
                 if not target_char:
+                    self.log_signal.emit(f"❌ 未找到目标特征值: {CHARACTERISTIC_UUID}")
                     return None, None
 
                 # 检查特征值是否支持读取操作
@@ -184,6 +186,7 @@ class BluetoothWorker(QThread):
                     # 解析数据格式: "key1:value1,key2:value2,..."
                     data_list = raw_data.split(",")
                     if len(data_list) != 13:  # 预期数据应包含 13 个字段
+                        self.log_signal.emit(f"数据格式错误！")
                         return None, None
 
                     # 提取所有值部分 (忽略键)
@@ -193,11 +196,14 @@ class BluetoothWorker(QThread):
                         if len(key_value) == 2:
                             result.append(key_value[1])
                         else:
+                            self.log_signal.emit(f"数据项格式错误: {item}！")
                             return None, None
                     return result, raw_data
                 else:
+                    self.log_signal.emit(f"特征值不可读！")
                     return None, None
-        except Exception:
+        except Exception as e:
+            self.log_signal.emit(f"读取设备数据异常: {type(e).__name__}: {str(e)}！")
             return None, None
 
     def get_data(self, data, info):
