@@ -154,8 +154,12 @@ class BluetoothWorker(QThread):
             tuple: (解析后的数据列表, 原始数据字符串), 失败时返回 (None, None)
         """
         try:
-            # 使用 BleakClient 连接到设备
-            async with BleakClient(self.device_address) as client:
+            # 使用 BleakClient 连接到设备，增加超时时间并启用配对
+            async with BleakClient(
+                self.device_address, 
+                timeout=30.0,  # 增加连接超时时间到30秒
+                winrt=dict(use_cached_services=False)  # Windows: 不使用缓存的服务，强制重新发现
+            ) as client:
                 # 获取设备的所有服务
                 services = await client.get_services()
 
@@ -203,7 +207,7 @@ class BluetoothWorker(QThread):
                     self.log_signal.emit(f"特征值不可读！")
                     return None, None
         except Exception as e:
-            self.log_signal.emit(f"读取设备数据异常: {type(e).__name__}: {str(e)}！")
+            self.log_signal.emit(f"读取设备数据异常: {type(e).__name__}: {e}！")
             return None, None
 
     def get_data(self, data, info):
@@ -278,7 +282,12 @@ class BluetoothWorker(QThread):
         byte_array = bytearray.fromhex(data)
 
         try:
-            async with BleakClient(self.device_address) as client:
+            # 使用相同的连接配置，增加超时和禁用缓存
+            async with BleakClient(
+                self.device_address,
+                timeout=30.0,
+                winrt=dict(use_cached_services=False)
+            ) as client:
                 # 启用通知，监听设备的响应数据
                 await client.start_notify(CHARACTERISTIC_UUID, self.notification_handler)
 
