@@ -46,7 +46,7 @@ jobs:
       - name: Build Windows .exe with PyInstaller
         run: |
           pyinstaller --windowed --onefile xdjkgui.py `
-            --icon=assets/xdjk.ico `
+            --icon=assets/image.ico `
             --name xdjkgui `
             --add-data "config.py;."
 
